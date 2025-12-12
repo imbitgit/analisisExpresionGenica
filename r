@@ -47,25 +47,18 @@ if (!require("pheatmap")) {
   library(pheatmap)
 }
 
-#Normalizar los datos
-vsd <- vst(dds, blind = FALSE)
+# Variance Stabilizing Transformation
+# CORRECCIÓN: Usamos varianceStabilizingTransformation directamente porque vst() falla con menos de 1000 genes
+vsd <- varianceStabilizingTransformation(dds, blind = FALSE)
 
-top_genes <- head(order(res$padj, na.last = NA), 20)
+# Seleccionar los 20 genes con mayor varianza
+top_genes <- head(order(apply(assay(vsd), 1, var), decreasing = TRUE), 20)
 
-if (length(top_genes) < 5) {
-    message("Pocos genes significativos encontrados. Seleccionando por varianza para el gráfico.")
-    #Calcular varianza de cada gen
-    gene_vars <- apply(assay(vsd), 1, var)
-    #Seleccionar los 20 con mayor varianza
-    top_genes <- head(order(gene_vars, decreasing = TRUE), 20)
-}
-
+# Crear el objeto heatmap_data 
 heatmap_data <- assay(vsd)[top_genes, ]
 
-#Crear el mapa de calor
-pheatmap(heatmap_data, 
-         cluster_rows = TRUE, 
-         cluster_cols = TRUE,
-         show_rownames = TRUE, 
-         show_colnames = TRUE,
-         annotation_col = colData)
+#Generar el Heatmap
+pheatmap(heatmap_data,
+         cluster_rows = TRUE)
+
+
